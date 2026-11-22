@@ -70,6 +70,9 @@ public static class Strings {
     public static string OpenFolder => Pick("Abrir carpeta", "Open folder");
     public static string Copy => Pick("Copiar", "Copy");
     public static string Copied => Pick("Copiado", "Copied");
+    public static string CopyPath => Pick("Copiar ruta", "Copy path");
+    public static string OpenInExplorer => Pick("Abrir ruta en el Explorador de archivos", "Open path in File Explorer");
+    public static string PathCopied => Pick("Ruta copiada", "Path copied");
     public static string TabSummary => Pick("Resumen", "Summary");
     public static string TabAttributes => Pick("Atributos", "Attributes");
     public static string[] AttributeColumns => IsEnglish

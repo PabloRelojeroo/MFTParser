@@ -443,7 +443,18 @@ public partial class MainWindow : Window {
     }
 
     void OnGridMenu(object sender, ContextMenuEventArgs e) {
-        if (e.OriginalSource is not DependencyObject source || FindParent<DataGridColumnHeader>(source) == null) {
+        if (e.OriginalSource is not DependencyObject source) {
+            EntriesGrid.ContextMenu = null;
+            return;
+        }
+
+        if (FindParent<DataGridRow>(source) is { Item: MftEntry row }) {
+            EntriesGrid.SelectedItem = row;
+            EntriesGrid.ContextMenu = RowMenu(row);
+            return;
+        }
+
+        if (FindParent<DataGridColumnHeader>(source) == null) {
             EntriesGrid.ContextMenu = null;
             return;
         }
@@ -842,12 +853,37 @@ public partial class MainWindow : Window {
         return current as T;
     }
 
+    ContextMenu RowMenu(MftEntry entry) {
+        var copy = new MenuItem { Header = Strings.CopyPath };
+        copy.Click += (_, _) => CopyPath(entry);
+
+        var open = new MenuItem { Header = Strings.OpenInExplorer, IsEnabled = _result?.Source.IsLive == true };
+        open.Click += (_, _) => OpenInExplorer(entry);
+
+        var menu = new ContextMenu();
+        menu.Items.Add(copy);
+        menu.Items.Add(open);
+        return menu;
+    }
+
+    void CopyPath(MftEntry entry) {
+        try {
+            Clipboard.SetText(RealPath(entry.Folder).TrimEnd('\\') + "\\" + entry.Name);
+            WarnText.Text = Strings.PathCopied;
+        } catch (COMException ex) {
+            WarnText.Text = ex.Message;
+        }
+    }
+
     void OnOpenFolder(object sender, RoutedEventArgs e) {
-        var entry = _selected;
-        if (entry == null || _result?.Source.IsLive != true) return;
+        if (_selected != null) OpenInExplorer(_selected);
+    }
+
+    void OpenInExplorer(MftEntry entry) {
+        if (_result?.Source.IsLive != true) return;
 
         try {
-            var folder = RealPath(entry.Base.Folder);
+            var folder = RealPath(entry.Base.Folder).TrimEnd('\\');
             var path = folder + "\\" + entry.Base.Name;
             if (entry.InUse && (File.Exists(path) || Directory.Exists(path))) {
                 Process.Start("explorer.exe", $"/select,\"{path}\"");
